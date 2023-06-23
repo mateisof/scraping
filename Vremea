@@ -1,32 +1,72 @@
-import sys
-import requests
 import streamlit as st
-def get_weather(city):
-    api_key = "3ab90de45fc8aba5c16b70138c6045f5"
-    base_url = "http://api.openweathermap.org/data/2.5/weather"
-    params = {
-        "q": city,
-        "appid": api_key,
-        "units": "metric"
-    }
-    response = requests.get(base_url, params=params)
-    weather_data = response.json()
-    return weather_data
+import requests
+import datetime
+import pandas as pd
 
-def main():
-    st.title("Weather App")
-    city = st.text_input("Enter a city name:")
-    if st.button("Get Weather"):
-        weather_data = get_weather(city)
-        if weather_data["cod"] == 200:
-            temperature = weather_data["main"]["temp"]
-            humidity = weather_data["main"]["humidity"]
-            description = weather_data["weather"][0]["description"]
-            st.write(f"Temperature: {temperature} °C")
-            st.write(f"Humidity: {humidity}%")
-            st.write(f"Description: {description}")
-        else:
-            st.write("Error retrieving weather data.")
+api_key = "3ab90de45fc8aba5c16b70138c6045f5"
 
-if __name__ == "__main__":
-    main()
+url = 'http://api.openweathermap.org/data/2.5/weather?q={}&appid={}'
+url_1 = 'https://api.openweathermap.org/data/2.5/onecall/timemachine?lat={}&lon={}&dt={}&appid={}'
+
+def getweather(city):
+    result = requests.get(url.format(city, api_key))
+    if result:
+        json = result.json()
+        #st.write(json)
+        country = json['sys']['country']
+        temp = json['main']['temp'] - 273.15
+        temp_feels = json['main']['feels_like'] - 273.15
+        humid = json['main']['humidity']
+        icon = json['weather'][0]['icon']
+        lon = json['coord']['lon']
+        lat = json['coord']['lat']
+        des = json['weather'][0]['description']
+        tmin = json['main']['temp_min'] - 273.15
+        tmax = json['main']['temp_max'] - 273.15
+        pres = json['main']['pressure']
+        wsp = json['wind']['speed']
+        rise = json['sys']['sunrise']
+        set = json['sys']['sunset']
+        res = [country, round(temp, 1), round(temp_feels, 1),
+               humid, lon, lat, icon, des, tmin, tmax, pres,
+               wsp, rise, set]
+        return res, json
+    else:
+        print("error in search !")
+
+
+
+st.title('Weather')
+
+col1, col2 = st.columns(2)
+
+with col1:
+    city_name = st.text_input("Enter a city name:")
+    if city_name:
+        res, json = getweather(city_name)
+        current = datetime.date.today()
+        form = current.strftime("%d/%m/%Y")
+        st.info('Date: ' + str(form))
+        st.success('Current: ' + str(round(res[1], 2)) + '°C')
+        st.success('Feels Like: ' + str(round(res[2], 2)) + '°C')
+        st.success('Humidity: ' + str(round(res[3], 2)) + '%')
+        st.info('Temp Variation: ' + str(round(res[8], 2)) + ' - ' + str(round(res[9], 2)) + '°C')
+
+with col2:
+    if city_name:
+        res, json = getweather(city_name)
+        st.subheader('Status: ' + res[7])
+        web_str = "![Alt Text]" + "(http://openweathermap.org/img/wn/" + str(res[6]) + "@2x.png)"
+        st.markdown(web_str)
+        st.info('Pressure: ' + str(round(res[10], 2)) + ' hPa')
+        st.info('Wind Speed: ' + str(round(res[11], 2)) + ' km/h')
+        ob1 = datetime.datetime.fromtimestamp(float(round(res[12], 2)))
+        ob2 = datetime.datetime.fromtimestamp(float(round(res[13], 2)))
+        rise = ob1.strftime("%H:%M")
+        set = ob2.strftime("%H:%M")
+        st.info('Sunrise: ' + str(rise))
+        st.info('Sunset: ' + str(set))
+
+if city_name:
+    res, json = getweather(city_name)
+    st.map(pd.DataFrame({'lat': [res[5]], 'lon': [res[4]]}, columns=['lat', 'lon']))
