@@ -1,0 +1,32 @@
+import streamlit as st
+import requests
+
+def get_news(api_key, query, language):
+    url = f"https://newsapi.org/v2/everything?q={query}&language={language}&apiKey={api_key}"
+    response = requests.get(url)
+    data = response.json()
+    #st.write(data)
+    return data["articles"]
+
+st.title("News")
+
+api_key = "a5602b56f22041508c8049edc3da4479"
+language = st.selectbox("Language:", ["en", "ro", "fr", "de"])
+query = st.text_input("Search:")
+
+
+if api_key and query and language:
+    articles = get_news(api_key, query, language)
+
+    for article in articles:
+        st.header(article["title"])
+        st.subheader("Description:  " + article["description"])
+        st.info("Link: " + article["url"])
+        st.write(article["content"])
+        img = article["urlToImage"]
+        if img:
+            st.image(article["urlToImage"])
+        st.success("Source:  " + article["source"]["name"])
+        st.write("---")
+else:
+    st.warning("Vă rugăm să completați toate câmpurile.")
