@@ -51,7 +51,8 @@ with col1:
         st.success('Feels Like: ' + str(round(res[2], 2)) + '°C')
         st.success('Humidity: ' + str(round(res[3], 2)) + '%')
         st.info('Temp Variation: ' + str(round(res[8], 2)) + ' - ' + str(round(res[9], 2)) + '°C')
-
+    else:
+        st.warning("Vă rugăm să completați toate câmpurile.")
 with col2:
     if city_name:
         res, json = getweather(city_name)
