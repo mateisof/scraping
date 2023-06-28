@@ -1,0 +1,183 @@
+import streamlit as st
+import requests
+import json
+
+def get_data(api_key, camp):
+    url = f"https://api.football-data.org/v4/competitions/{camp}/standings"
+    headers = {'X-Auth-Token': api_key}
+    result = requests.get(url, headers=headers)
+    data = result.json()
+    return data
+
+def functie_optiune1():
+    st.write("Ai selectat Opțiunea 1")
+
+def functie_optiune2():
+    url = 'https://api.football-data.org/v4/competitions'
+    api_key = '3c8a44c2af024afdb6847b0af0862d12'
+    headers = {'X-Auth-Token': api_key}
+    result = requests.get(url, headers=headers)
+    camp = st.selectbox("Competition:", ["-", "All", "BSA", "ELC", "PL", "CL", "EC", "FL1", "BL1", "SA", "DED", "PPL", "CLI", "PD", "WC"])
+
+    if api_key and camp != '-' and camp != "All":
+        data = get_data(api_key, camp)
+        st.write(data)
+        st.header(data["competition"]["name"])
+        sezoane = []
+        for an in range(1950, 2024):
+            sezon = f"{an}-{an + 1}"
+            sezoane.append(sezon)
+        sezoane.reverse()
+        selected_sezon = st.selectbox("Season: ", sezoane)
+        #start_year = int(competition["currentSeason"]["startDate"][:4])
+        for an in data["seasons"]:
+            st.write(an)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info("Country: " + data["area"]["name"] + " (" + data["area"]["code"] + ")")
+            st.info("Type: " + data["type"])
+            st.info("Date: " + data["currentSeason"]["startDate"] + " - " + data["currentSeason"]["endDate"])
+
+        with col2:
+            img = data["emblem"]
+            if img:
+                st.image(img)
+
+
+    elif camp == "All":
+        for competition in result.json()["competitions"]:
+            #st.write(competition)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.success(competition["area"]["name"])
+                st.subheader(competition["type"] + ": ")
+                st.write("Name: " + competition["name"])
+                st.write("Short: " + competition["code"])
+                st.write("Date: " + competition["currentSeason"]["startDate"] + " - " + competition["currentSeason"]["startDate"])
+            with col2:
+                img = competition["emblem"]
+                if img:
+                    st.image(img)
+
+            winn = competition["currentSeason"]["winner"]
+
+            if winn:
+                winner = winn["name"]
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.info("WINNER: " + str(winner))
+                with col2:
+                    st.image(competition["currentSeason"]["winner"]["crest"])
+            st.write("\n\n")
+
+    else:
+        st.warning("Vă rugăm să completați toate câmpurile.")
+
+def functie_optiune3():
+    st.subheader("LIVE:")
+    uri = 'http://api.football-data.org/v2/matches?status=LIVE'
+    head = {'X-Auth-Token': '3c8a44c2af024afdb6847b0af0862d12'}
+    res = requests.get(uri, headers=head)
+
+    for match in res.json()["matches"]:
+        score = match["score"]["fullTime"]["home"]
+        if score:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                col1_1, col2_1 = st.columns(2)
+                with col1_1:
+                    st.image(match["homeTeam"]["crest"])
+                with col2_1:
+                    st.write(match["homeTeam"]["name"])
+                    tla = (match["homeTeam"]["tla"])
+                    if tla:
+                        st.write(tla)
+
+            with col2:
+                col1_2, col2_2, col3_2 = st.columns(3)
+
+                with col1_2:
+                    st.write(match["score"]["fullTime"]["home"])
+                with col2_2:
+                    st.write('--')
+                    st.write(match["area"]["name"])
+                with col3_2:
+                    st.write(match["score"]["fullTime"]["away"])
+
+            with col3:
+                col1_3, col2_3 = st.columns(2)
+                with col1_3:
+                    st.write(match["awayTeam"]["name"])
+                    tla = (match["awayTeam"]["tla"])
+                    if tla:
+                        st.write(tla)
+                with col2_3:
+                    st.image(match["awayTeam"]["crest"])
+            st.write("\n\n")
+
+    st.subheader("PLAYED:")
+    url = 'https://api.football-data.org/v4/matches'
+    headers = {'X-Auth-Token': '3c8a44c2af024afdb6847b0af0862d12'}
+    result = requests.get(url, headers=headers)
+
+    for match in result.json()['matches']:
+        #st.write(match)
+        score = match["score"]["fullTime"]["home"]
+        if score:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                col1_1, col2_1 = st.columns(2)
+                with col1_1:
+                    st.image(match["homeTeam"]["crest"])
+                with col2_1:
+                    st.write(match["homeTeam"]["name"])
+                    tla = (match["homeTeam"]["tla"])
+                    if tla:
+                        st.write(tla)
+
+            with col2:
+                col1_2, col2_2, col3_2 = st.columns(3)
+
+                with col1_2:
+                    st.write(match["score"]["fullTime"]["home"])
+                with col2_2:
+                    st.write('--')
+                    st.write(match["area"]["name"])
+                with col3_2:
+                    st.write(match["score"]["fullTime"]["away"])
+
+            with col3:
+                col1_3, col2_3 = st.columns(2)
+                with col1_3:
+                    st.write(match["awayTeam"]["name"])
+                    tla = (match["awayTeam"]["tla"])
+                    if tla:
+                        st.write(tla)
+                with col2_3:
+                    st.image(match["awayTeam"]["crest"])
+            st.write("\n\n")
+
+
+def functie_optiune4():
+    st.write("Ai selectat Opțiunea 4")
+
+def functie_optiune5():
+    st.write("Ai selectat Opțiunea 5")
+
+def functie():
+    st.write("")
+
+optiuni_functii = {
+    "-": functie,
+    "Area": functie_optiune1,
+    "Competition": functie_optiune2,
+    "Match": functie_optiune3,
+    "Team": functie_optiune4,
+    "Person": functie_optiune5
+}
+
+optiune = st.selectbox("Search:", list(optiuni_functii.keys()))
+
+if optiune in optiuni_functii:
+    optiuni_functii[optiune]()
