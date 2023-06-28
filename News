@@ -11,11 +11,11 @@ def get_news(api_key, query, language):
 st.title("News")
 
 api_key = "a5602b56f22041508c8049edc3da4479"
-language = st.selectbox("Language:", ["en", "ro", "fr", "de"])
+language = st.selectbox("Language:", ["-", "en", "ro", "fr", "de"])
 query = st.text_input("Search:")
 
 
-if api_key and query and language:
+if api_key and query and language != '-':
     articles = get_news(api_key, query, language)
 
     for article in articles:
