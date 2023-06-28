@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import json
+import pandas as pd
 
 def get_data(api_key, camp):
     url = f"https://api.football-data.org/v4/competitions/{camp}/standings"
@@ -24,28 +24,92 @@ def functie_optiune2():
         st.write(data)
         st.header(data["competition"]["name"])
         sezoane = []
-        for an in range(1950, 2024):
+        for an in range(2021, 2024):
             sezon = f"{an}-{an + 1}"
             sezoane.append(sezon)
         sezoane.reverse()
         selected_sezon = st.selectbox("Season: ", sezoane)
-        #start_year = int(competition["currentSeason"]["startDate"][:4])
-        for an in data["seasons"]:
-            st.write(an)
-
+        year = selected_sezon.split("-")[0]
+        url = f"https://api.football-data.org/v4/competitions/{camp}/standings/?season={year}"
+        headers = {'X-Auth-Token': api_key}
+        result = requests.get(url, headers=headers)
+        data = result.json()
+        st.write(data)
         col1, col2 = st.columns(2)
         with col1:
             st.info("Country: " + data["area"]["name"] + " (" + data["area"]["code"] + ")")
-            st.info("Type: " + data["type"])
-            st.info("Date: " + data["currentSeason"]["startDate"] + " - " + data["currentSeason"]["endDate"])
-
+            st.info("Type: " + data["competition"]["type"])
+            st.info("Date: " + data["season"]["startDate"] + " - " + data["season"]["endDate"])
+            winner = data["season"]["winner"]
+            if winner:
+                st.success(winner["name"])
         with col2:
-            img = data["emblem"]
+            img = data["competition"]["emblem"]
             if img:
                 st.image(img)
-
+        winner = data["season"]["winner"]
+        #st.write(date)
+        if winner:
+            pozitii = []
+            name = []
+            img = []
+            played = []
+            form = []
+            won = []
+            draw = []
+            lost = []
+            points = []
+            goalsF = []
+            goalsA = []
+            goaldif = []
+            table = {
+                'Position' : [],
+                'Emblem' : [],
+                'Name' : [],
+                'Form' : [],
+                'Played' : [],
+                'Won' : [],
+                'Draw' : [],
+                'Lost' : [],
+                'Points' : [],
+                'Goals' : [],
+                'Goals taken' : [],
+                'Goal diff' : []
+            }
+            df = pd.DataFrame(table)
+            #st.write(df.to_string(index=False))
+            #st.write(df)
+            i = 0
+            for line in data["standings"][0]["table"]:
+                pos = line["position"]
+                nm = line["team"]["shortName"]
+                im = line["team"]["crest"]
+                play = line["playedGames"]
+                frm = line["form"]
+                wn = line["won"]
+                dw = line["draw"]
+                ls = line["lost"]
+                pt = line["points"]
+                gf = line["goalsFor"]
+                ga = line["goalsAgainst"]
+                gd = line["goalDifference"]
+                df.loc[i] = [pos, im, nm, play, frm, wn, dw, ls, pt, gf, ga, gd]
+                i = i + 1
+            #df = pd.DataFrame(table)
+            #st.write(df.to_string(index=False))
+            #st.write(df)
+            #df = pd.DataFrame(date)\
+            #df['Emblem'] = df['Emblem'].apply(lambda x: f'<img src="{x}" width="100" />')
+            for i, row in df.iterrows():
+                st.image(row['Emblem'], caption=row['Name'], width=100)
+            df_html = df.to_html(classes=["dataframe"], index=False)
+            st.markdown(df_html, unsafe_allow_html=True)
+            st.table(df)
+            #st.write(df.to_string(index=False))
+           # rezultate = rezultate.append({'Rezultat': rezultat}, ignore_index=True)
 
     elif camp == "All":
+        #data = get_data(api_key, camp)
         for competition in result.json()["competitions"]:
             #st.write(competition)
             col1, col2 = st.columns(2)
