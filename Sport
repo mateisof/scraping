@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-
 def get_data(api_key, camp):
     url = f"https://api.football-data.org/v4/competitions/{camp}/standings"
     headers = {'X-Auth-Token': api_key}
@@ -9,32 +8,35 @@ def get_data(api_key, camp):
     data = result.json()
     return data
 
-def functie_optiune1():
-    st.write("Ai selectat Opțiunea 1")
+def get_result(api_key, camp, matchday, year):
+    url = f"https://api.football-data.org/v4/competitions/{camp}/matches?matchday={matchday}&season={year}"
+    headers = {'X-Auth-Token': api_key}
+    result = requests.get(url, headers=headers)
+    data = result.json()
+    return data
 
 def functie_optiune2():
     url = 'https://api.football-data.org/v4/competitions'
     api_key = '3c8a44c2af024afdb6847b0af0862d12'
     headers = {'X-Auth-Token': api_key}
     result = requests.get(url, headers=headers)
-    camp = st.selectbox("Competition:", ["-", "All", "BSA", "ELC", "PL", "CL", "EC", "FL1", "BL1", "SA", "DED", "PPL", "CLI", "PD", "WC"])
+    camp = st.selectbox("Competition:", ["-", "All", "BSA", "ELC", "PL", "FL1", "BL1", "SA", "DED", "PPL", "PD"])
 
     if api_key and camp != '-' and camp != "All":
         data = get_data(api_key, camp)
-        st.write(data)
+        #st.write(data)
         st.header(data["competition"]["name"])
         sezoane = []
         for an in range(2021, 2024):
             sezon = f"{an}-{an + 1}"
             sezoane.append(sezon)
-        sezoane.reverse()
         selected_sezon = st.selectbox("Season: ", sezoane)
         year = selected_sezon.split("-")[0]
         url = f"https://api.football-data.org/v4/competitions/{camp}/standings/?season={year}"
         headers = {'X-Auth-Token': api_key}
         result = requests.get(url, headers=headers)
         data = result.json()
-        st.write(data)
+        #st.write(data)
         col1, col2 = st.columns(2)
         with col1:
             st.info("Country: " + data["area"]["name"] + " (" + data["area"]["code"] + ")")
@@ -49,64 +51,38 @@ def functie_optiune2():
                 st.image(img)
         winner = data["season"]["winner"]
         #st.write(date)
-        if winner:
-            pozitii = []
-            name = []
-            img = []
-            played = []
-            form = []
-            won = []
-            draw = []
-            lost = []
-            points = []
-            goalsF = []
-            goalsA = []
-            goaldif = []
-            table = {
-                'Position' : [],
-                'Emblem' : [],
-                'Name' : [],
-                'Form' : [],
-                'Played' : [],
-                'Won' : [],
-                'Draw' : [],
-                'Lost' : [],
-                'Points' : [],
-                'Goals' : [],
-                'Goals taken' : [],
-                'Goal diff' : []
-            }
-            df = pd.DataFrame(table)
-            #st.write(df.to_string(index=False))
-            #st.write(df)
-            i = 0
-            for line in data["standings"][0]["table"]:
-                pos = line["position"]
-                nm = line["team"]["shortName"]
-                im = line["team"]["crest"]
-                play = line["playedGames"]
-                frm = line["form"]
-                wn = line["won"]
-                dw = line["draw"]
-                ls = line["lost"]
-                pt = line["points"]
-                gf = line["goalsFor"]
-                ga = line["goalsAgainst"]
-                gd = line["goalDifference"]
-                df.loc[i] = [pos, im, nm, play, frm, wn, dw, ls, pt, gf, ga, gd]
-                i = i + 1
-            #df = pd.DataFrame(table)
-            #st.write(df.to_string(index=False))
-            #st.write(df)
-            #df = pd.DataFrame(date)\
-            #df['Emblem'] = df['Emblem'].apply(lambda x: f'<img src="{x}" width="100" />')
-            for i, row in df.iterrows():
-                st.image(row['Emblem'], caption=row['Name'], width=100)
-            df_html = df.to_html(classes=["dataframe"], index=False)
-            st.markdown(df_html, unsafe_allow_html=True)
-            st.table(df)
-            #st.write(df.to_string(index=False))
-           # rezultate = rezultate.append({'Rezultat': rezultat}, ignore_index=True)
+        table = {
+            'Position' : [],
+            'Name' : [],
+            'Form' : [],
+            'Played' : [],
+            'Won' : [],
+            'Draw' : [],
+            'Lost' : [],
+            'Points' : [],
+            'Goals' : [],
+            'Goals taken' : [],
+            'Goal diff' : []
+        }
+        df = pd.DataFrame(table)
+        i = 0
+        for line in data["standings"][0]["table"]:
+            pos = line["position"]
+            nm = line["team"]["shortName"]
+            play = line["playedGames"]
+            frm = line["form"]
+            wn = line["won"]
+            dw = line["draw"]
+            ls = line["lost"]
+            pt = line["points"]
+            gf = line["goalsFor"]
+            ga = line["goalsAgainst"]
+            gd = line["goalDifference"]
+            df.loc[i] = [pos, nm, play, frm, wn, dw, ls, pt, gf, ga, gd]
+            i = i + 1
+
+        df_html = df.to_html(classes=["dataframe"], index=False)
+        st.markdown(df_html, unsafe_allow_html=True)
 
     elif camp == "All":
         #data = get_data(api_key, camp)
@@ -222,23 +198,91 @@ def functie_optiune3():
                     st.image(match["awayTeam"]["crest"])
             st.write("\n\n")
 
-
 def functie_optiune4():
-    st.write("Ai selectat Opțiunea 4")
+    url = 'https://api.football-data.org/v4/teams/?limit=100'
+    api_key = '3c8a44c2af024afdb6847b0af0862d12'
+    headers = {'X-Auth-Token': api_key}
+    result = requests.get(url, headers=headers)
+    data = result.json()
+    #st.write(data)
+    camp = st.selectbox("League:", ["-", "All", "BSA", "ELC", "PL", "FL1", "BL1", "SA", "DED", "PPL", "PD"])
+    if api_key and camp != "-" and camp != "All":
+        res = get_data(api_key, camp)
+        #st.write(res)
+        for team in res["standings"][0]["table"]:
+            col1, col2 = st.columns(2)
+            with col2:
+                st.image(team["team"]["crest"], width=200)
+            with col1:
+                st.success(team["team"]["name"])
+            st.write("---")
+    elif api_key and camp == "All":
+        for team in data["teams"]:
+            col1, col2 = st.columns(2)
+            with col2:
+                st.image(team["crest"], width=200)
+            with col1:
+                st.success(team["name"])
+                st.info("Founded: " + str(team["founded"]))
+                if team["venue"]:
+                    st.info("Stadium: " + team["venue"])
+            st.write("---")
 
 def functie_optiune5():
-    st.write("Ai selectat Opțiunea 5")
+    api_key = '3c8a44c2af024afdb6847b0af0862d12'
+    camp = st.selectbox("Competition:", ["-", "BSA", "ELC", "PL", "FL1", "BL1", "SA", "DED", "PPL", "PD"])
+    if camp == '-':
+        st.warning("Vă rugăm să completați toate câmpurile.")
+    else:
+        matchday = st.selectbox("Select a number for matchday: ", range(1, 39), 0)
+        result = get_result(api_key, camp, matchday, 2022)
+        #st.write(result)
+        for match in result["matches"]:
+            score = match["score"]["fullTime"]["home"]
+            if score:
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    col1_1, col2_1 = st.columns(2)
+                    with col1_1:
+                        st.image(match["homeTeam"]["crest"], width=100)
+                    with col2_1:
+                        st.write(match["homeTeam"]["name"])
+                        tla = (match["homeTeam"]["tla"])
+                        if tla:
+                            st.write(tla)
+                st.write("---")
+
+                with col2:
+                    col1_2, col2_2, col3_2 = st.columns(3)
+
+                    with col1_2:
+                        st.write(match["score"]["fullTime"]["home"])
+                    with col2_2:
+                        st.write('--')
+                        st.write(match["area"]["name"])
+                    with col3_2:
+                        st.write(match["score"]["fullTime"]["away"])
+
+                with col3:
+                    col1_3, col2_3 = st.columns(2)
+                    with col1_3:
+                        st.write(match["awayTeam"]["name"])
+                        tla = (match["awayTeam"]["tla"])
+                        if tla:
+                            st.write(tla)
+                    with col2_3:
+                        st.image(match["awayTeam"]["crest"], width=100)
+                st.write("\n\n")
 
 def functie():
-    st.write("")
+    st.warning("Vă rugăm să completați toate câmpurile.")
 
 optiuni_functii = {
     "-": functie,
-    "Area": functie_optiune1,
-    "Competition": functie_optiune2,
-    "Match": functie_optiune3,
-    "Team": functie_optiune4,
-    "Person": functie_optiune5
+    "Competitions": functie_optiune2,
+    "Today's matches": functie_optiune3,
+    "Teams": functie_optiune4,
+    "Matches": functie_optiune5
 }
 
 optiune = st.selectbox("Search:", list(optiuni_functii.keys()))
